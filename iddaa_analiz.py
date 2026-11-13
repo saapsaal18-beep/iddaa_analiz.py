@@ -98,7 +98,8 @@ def cift_bar_ciz(baslik, sol_et, sol_y, sag_et, sag_y):
 def bulten_getir(key=""):
     if key:
         try:
-            r = requests.get(f"https://the-odds-api.com{key}&regions=eu&markets=h2h,totals", timeout=5)
+            r = requests.get(f"https://the-odds-api.com{key}&regions=eu&markets=h2h,totals", timeout=8)
+
             if r.status_code == 200:
                 lst = []
                 for idx, x in enumerate(r.json()[:15]):
