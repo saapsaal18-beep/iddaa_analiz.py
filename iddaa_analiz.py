@@ -98,32 +98,56 @@ def cift_bar_ciz(baslik, sol_et, sol_y, sag_et, sag_y):
 def bulten_getir(key=""):
     if key:
         try:
-            r = requests.get(f"https://the-odds-api.com{key}&regions=eu&markets=h2h,totals", timeout=8)
-
+            url = f"https://the-odds-api.com{key.strip()}&regions=eu&markets=h2h,totals"
+            r = requests.get(url, timeout=10)
             if r.status_code == 200:
                 lst = []
-                for idx, x in enumerate(r.json()[:15]):
+                for x in r.json():
+                    if "soccer" not in x.get("sport_key", ""):
+                        continue
+                    tarih_raw = x.get("commence_time", "")[:16].replace("T", " ")
                     o1, ox, o2, o25_u, o25_a = 2.10, 3.30, 3.20, 1.75, 1.95
-                    for b in x.get("bookmakers",[]):
-                        for m in b.get("markets",[]):
-                            if m["key"]=="h2h":
+                    for b in x.get("bookmakers", []):
+                        for m in b.get("markets", []):
+                            if m["key"] == "h2h":
                                 for o in m["outcomes"]:
-                                    if o["name"]==x["home_team"]: o1 = o["price"]
-                                    elif o["name"]==x["away_team"]: o2 = o["price"]
+                                    if o["name"] == x["home_team"]: o1 = o["price"]
+                                    elif o["name"] == x["away_team"]: o2 = o["price"]
                                     else: ox = o["price"]
-                            if m["key"]=="totals":
+                            if m["key"] == "totals":
                                 for o in m["outcomes"]:
-                                    if o["name"]=="Over" and o["point"]==2.5: o25_u = o["price"]
-                                    if o["name"]=="Under" and o["point"]==2.5: o25_a = o["price"]
-                    lst.append({"kod":str(500+idx),"ev":x["home_team"],"dep":x["away_team"],"dk":1,"eg":0,"dg":0,"e_att":1.8,"e_yed":1.1,"d_att":1.4,"d_yed":1.3,"e_kor":5.6,"d_kor":4.8,"o1":o1,"ox":ox,"o2":o2,"o25":o25_u,"o25_a":o25_a,"okg":1.80,"okg_y":1.85,"okor":1.75,"okor_a":1.85})
-                if lst: return lst
-        except: pass
+                                    if o["name"] == "Over" and o.get("point") == 2.5: o25_u = o["price"]
+                                    if o["name"] == "Under" and o.get("point") == 2.5: o25_a = o["price"]
+                    lst.append({
+                        "kod": tarih_raw, "ev": x["home_team"], "dep": x["away_team"],
+                        "dk": 1, "eg": 0, "dg": 0, "e_att": 1.8, "e_yed": 1.1, "d_att": 1.4, "d_yed": 1.3,
+                        "e_kor": 5.6, "d_kor": 4.8, "o1": o1, "ox": ox, "o2": o2,
+                        "o25": o25_u, "o25_a": o25_a, "okg": 1.80, "okg_y": 1.85, "okor": 1.75, "okor_a": 1.85
+                    })
+                if lst:
+                    st.sidebar.success(f"🟢 {len(lst)} Canlı & İleri Tarihli Maç Çekildi!")
+                    return lst[:30]
+        except Exception as e:
+            st.sidebar.error(f"❌ Bağlantı Hatası: {e}")
+
+    # 14 - 15 - 16 Kasım 2026 (3 Günlük Sadeleştirilmiş Bülten)
     return [
-        {"kod":"104","ev":"Galatasaray","dep":"Samsunspor","dk":1,"eg":0,"dg":0,"e_att":2.6,"e_yed":0.8,"d_att":1.4,"d_yed":1.6,"e_kor":6.8,"d_kor":4.4,"o1":1.42,"ox":4.30,"o2":5.80,"o25":1.52,"o25_a":2.15,"okg":1.85,"okg_y":1.75,"okor":1.65,"okor_a":1.95},
-        {"kod":"112","ev":"Fenerbahçe","dep":"Göztepe","dk":34,"eg":0,"dg":1,"e_att":2.4,"e_yed":0.9,"d_att":1.3,"d_yed":1.5,"e_kor":6.4,"d_kor":4.2,"o1":1.85,"ox":3.50,"o2":3.60,"o25":1.55,"o25_a":2.10,"okg":1.60,"okg_y":2.05,"okor":1.70,"okor_a":1.90},
-        {"kod":"208","ev":"Leganes","dep":"Burgos","dk":57,"eg":3,"dg":0,"e_att":1.9,"e_yed":0.7,"d_att":0.9,"d_yed":1.4,"e_kor":5.1,"d_kor":3.8,"o1":1.05,"ox":9.50,"o2":18.0,"o25":1.10,"o25_a":4.50,"okg":2.40,"okg_y":1.42,"okor":1.85,"okor_a":1.75},
-        {"kod":"315","ev":"Arsenal","dep":"Chelsea","dk":1,"eg":0,"dg":0,"e_att":2.3,"e_yed":1.0,"d_att":2.0,"d_yed":1.4,"e_kor":6.5,"d_kor":5.4,"o1":1.92,"ox":3.45,"o2":3.40,"o25":1.68,"o25_a":1.95,"okg":1.62,"okg_y":2.00,"okor":1.72,"okor_a":1.88}
+        # 14 Kasım Cumartesi
+        {"kod":"14 Kas 20:00","ev":"Norveç","dep":"Galler","dk":1,"eg":0,"dg":0,"e_att":2.4,"e_yed":0.7,"d_att":1.1,"d_yed":1.6,"e_kor":6.4,"d_kor":4.2,"o1":1.08,"ox":6.21,"o2":9.93,"o25":1.24,"o25_a":2.62,"okg":2.15,"okg_y":1.48,"okor":1.65,"okor_a":1.95},
+        {"kod":"14 Kas 20:00","ev":"Gürcistan","dep":"Macaristan","dk":1,"eg":0,"dg":0,"e_att":1.4,"e_yed":1.2,"d_att":1.5,"d_yed":1.1,"e_kor":5.0,"d_kor":5.2,"o1":2.72,"ox":2.75,"o2":2.19,"o25":2.20,"o25_a":1.36,"okg":1.88,"okg_y":1.72,"okor":1.78,"okor_a":1.82},
+        {"kod":"14 Kas 22:45","ev":"Portekiz","dep":"Danimarka","dk":1,"eg":0,"dg":0,"e_att":2.5,"e_yed":0.8,"d_att":1.3,"d_yed":1.4,"e_kor":6.9,"d_kor":4.5,"o1":1.34,"ox":4.12,"o2":5.02,"o25":1.34,"o25_a":2.26,"okg":1.82,"okg_y":1.78,"okor":1.62,"okor_a":1.98},
+        {"kod":"14 Kas 22:45","ev":"Romanya","dep":"Polonya","dk":1,"eg":0,"dg":0,"e_att":1.4,"e_yed":1.3,"d_att":1.7,"d_yed":1.2,"e_kor":4.8,"d_kor":5.5,"o1":3.50,"ox":3.35,"o2":1.66,"o25":1.55,"o25_a":1.84,"okg":1.68,"okg_y":1.92,"okor":1.75,"okor_a":1.85},
+        {"kod":"14 Kas 22:45","ev":"İsveç","dep":"Bosna Hersek","dk":1,"eg":0,"dg":0,"e_att":2.2,"e_yed":0.9,"d_att":1.0,"d_yed":1.7,"e_kor":6.2,"d_kor":3.9,"o1":1.34,"ox":4.04,"o2":5.12,"o25":1.41,"o25_a":2.11,"okg":1.95,"okg_y":1.65,"okor":1.70,"okor_a":1.90},
+        # 15 Kasım Pazar
+        {"kod":"15 Kas 20:00","ev":"İtalya","dep":"Belçika","dk":1,"eg":0,"dg":0,"e_att":1.9,"e_yed":1.0,"d_att":1.8,"d_yed":1.2,"e_kor":6.0,"d_kor":5.6,"o1":1.82,"ox":3.25,"o2":3.50,"o25":1.72,"o25_a":1.85,"okg":1.68,"okg_y":1.92,"okor":1.70,"okor_a":1.90},
+        {"kod":"15 Kas 22:45","ev":"Fransa","dep":"Türkiye","dk":1,"eg":0,"dg":0,"e_att":2.3,"e_yed":0.8,"d_att":1.6,"d_yed":1.2,"e_kor":6.6,"d_kor":5.1,"o1":1.45,"ox":4.10,"o2":5.40,"o25":1.58,"o25_a":2.05,"okg":1.78,"okg_y":1.82,"okor":1.68,"okor_a":1.92},
+        {"kod":"15 Kas 22:45","ev":"İspanya","dep":"İngiltere","dk":1,"eg":0,"dg":0,"e_att":2.2,"e_yed":0.9,"d_att":2.1,"d_yed":1.0,"e_kor":6.5,"d_kor":5.8,"o1":2.05,"ox":3.15,"o2":3.10,"o25":1.75,"o25_a":1.82,"okg":1.65,"okg_y":1.95,"okor":1.66,"okor_a":1.94},
+        # 16 Kasım Pazartesi
+        {"kod":"16 Kas 18:00","ev":"Kazakistan","dep":"Slovakya","dk":1,"eg":0,"dg":0,"e_att":0.9,"e_yed":1.8,"d_att":1.7,"d_yed":1.0,"e_kor":3.8,"d_kor":5.7,"o1":4.40,"ox":3.30,"o2":1.62,"o25":1.85,"o25_a":1.72,"okg":1.95,"okg_y":1.65,"okor":1.76,"okor_a":1.84},
+        {"kod":"16 Kas 22:45","ev":"Almanya","dep":"Hollanda","dk":1,"eg":0,"dg":0,"e_att":2.5,"e_yed":1.1,"d_att":2.2,"d_yed":1.2,"e_kor":6.8,"d_kor":6.1,"o1":1.78,"ox":3.55,"o2":3.45,"o25":1.48,"o25_a":2.18,"okg":1.52,"okg_y":2.12,"okor":1.60,"okor_a":2.00},
+        {"kod":"16 Kas 22:45","ev":"İsviçre","dep":"İskoçya","dk":1,"eg":0,"dg":0,"e_att":1.8,"e_yed":1.0,"d_att":1.2,"d_yed":1.5,"e_kor":5.9,"d_kor":4.5,"o1":1.65,"ox":3.40,"o2":4.20,"o25":1.80,"o25_a":1.76,"okg":1.86,"okg_y":1.74,"okor":1.72,"okor_a":1.88}
     ]
+
 st.markdown("<h2 style='text-align:center;margin-bottom:5px;'>İddaa <span class='red'>Quantum</span> Ultimate</h2>", unsafe_allow_html=True)
 api_key = st.sidebar.text_input("The Odds API Anahtarı (İsteğe Bağlı)", type="password")
 kasa = st.sidebar.number_input("Toplam Kasa Bakiyeniz (TL)", min_value=50, max_value=1000000, value=1000, step=100)
